@@ -2,9 +2,7 @@
 use 5.10.0;
 use strict;
 use warnings;
-use Test::More;
-
-plan tests => 1;
+use Test::More tests => 1;
 
 BEGIN {
     use_ok( 'QRCode::Base45' ) || print "Bail out!\n";

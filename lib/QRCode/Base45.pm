@@ -3,10 +3,15 @@ package QRCode::Base45;
 use 5.10.0;
 use strict;
 use warnings;
+use feature 'state';
+use Carp;
+use Encode;
+use base qw(Exporter);
+our @EXPORT = qw(encode_base45 decode_base45);
 
 =head1 NAME
 
-QRCode::Base45 - The great new QRCode::Base45!
+QRCode::Base45 - Base45 encoding used in QR codes
 
 =head1 VERSION
 
@@ -16,37 +21,104 @@ Version 0.01
 
 our $VERSION = '0.01';
 
+our $ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:';
+#                0         1         2         3         4
+#                012345678901234567890123456789012345678901234
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
-
     use QRCode::Base45;
 
-    my $foo = QRCode::Base45->new();
-    ...
+    my $text_for_qrcode = encode_base45($binary_data);
+    my $binary_data = decode_base45($text_from_qrcode);
 
-=head1 EXPORT
+=head1 DESCRIPTION
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+This module handles encoding/decoding Base45 data,
+as described in
+L<draft-faltstrom-base45-06|http://www.watersprings.org/pub/id/draft-faltstrom-base45-06.html>.
+Base45 is used especially in QR codes.
 
-=head1 SUBROUTINES/METHODS
+=head2 encode_base45
 
-=head2 function1
+Takes arbitrary string as argument, and returs the Base45 representation
+of it. Character strings (as opposed to byte strings) are encoded to bytes
+as UTF-8 first.
+
+For zero-length strings (undef or '') the empty string is returned.
 
 =cut
 
-sub function1 {
+sub encode_base45 {
+	my ($input) = @_;
+
+	return '' if !length $input;
+
+	$input = Encode::encode('UTF-8', $input)
+		if utf8::is_utf8($input);
+
+	my $output = '';
+
+	for my $chunk ($input =~ /..?/msg) {
+		my $sum = 0;
+		for my $byte (unpack('C*', $chunk)) {
+			$sum *= 256;
+			$sum += $byte;
+		}
+		for (0 .. length($chunk)) {
+			$output .= substr($ALPHABET, $sum % 45, 1);
+			$sum = int($sum/45);
+		}
+	}
+
+	return $output;
 }
 
-=head2 function2
+=head2 decode_base45
+
+The function takes a textual base45 representation of data,
+and tries to decode it. Returned value is a byte string (as this function
+cannot know whether the contents should be interpreted as bytes or UTF-8
+data (or whatever else). The caller has to decode the characters afterwards,
+if needed.
+
+For zero-length input, the empty string is returned.
+
+For invalid inputs, such as strings of length 3n+1 or characters
+outside of the Base45 alphabet, this function croak()s.
 
 =cut
 
-sub function2 {
+sub decode_base45 {
+	my ($input) = @_;
+
+	return '' if !length $input;
+
+	croak "decode_base45(): invalid input length " . length($input)
+		. " is 3*n+1"
+		if length($input) % 3 == 1;
+
+	my $map_count = 0;
+	state %value_of = map { $_ => $map_count++ } split //, $ALPHABET;
+
+	my $output = '';
+	for my $chunk ($input =~ /(...?)/g) {
+		my $sum = 0;
+		for my $c (reverse map { $value_of{$_} } split //, $chunk) {
+			croak "decode_base45(): chunk <$chunk> contains invalid character(s)"
+				if !defined $c;
+			$sum *= 45;
+			$sum += $c;
+		}
+
+		if (length $chunk == 3) {
+			$output .= pack('C', $sum >> 8);
+			$sum &= 0x00FF;
+		}
+		$output .= pack('C', $sum);
+	}
+
+	return $output;
 }
 
 =head1 AUTHOR
@@ -58,8 +130,6 @@ Jan "Yenya" Kasprzak, C<< <kas at fi.muni.cz> >>
 Please report any bugs or feature requests to C<bug-qrcode-base45 at rt.cpan.org>, or through
 the web interface at L<https://rt.cpan.org/NoAuth/ReportBug.html?Queue=QRCode-Base45>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
-
-
 
 
 =head1 SUPPORT
