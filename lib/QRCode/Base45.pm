@@ -99,12 +99,12 @@ sub decode_base45 {
 		if length($input) % 3 == 1;
 
 	my $map_count = 0;
-	state %value_of = map { $_ => $map_count++ } split //, $ALPHABET;
+	state $value_of = { map { $_ => $map_count++ } split //, $ALPHABET };
 
 	my $output = '';
 	for my $chunk ($input =~ /(...?)/g) {
 		my $sum = 0;
-		for my $c (reverse map { $value_of{$_} } split //, $chunk) {
+		for my $c (reverse map { $value_of->{$_} } split //, $chunk) {
 			croak "decode_base45(): chunk <$chunk> contains invalid character(s)"
 				if !defined $c;
 			$sum *= 45;
