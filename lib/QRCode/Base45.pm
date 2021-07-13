@@ -13,13 +13,9 @@ our @EXPORT = qw(encode_base45 decode_base45);
 
 QRCode::Base45 - Base45 encoding used in QR codes
 
-=head1 VERSION
-
-Version 0.01
-
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 our $ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:';
 #                0         1         2         3         4

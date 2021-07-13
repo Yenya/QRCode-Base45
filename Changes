@@ -1,5 +1,8 @@
 Revision history for QRCode-Base45
 
+{{$NEXT}}
+	Use Dist::Zilla as build system
+	
 0.02	2021-07-14
 	Documentation fixes.
 	Portability fix for Perl < 5.20

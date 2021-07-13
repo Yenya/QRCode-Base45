@@ -2,16 +2,14 @@
 
 QRCode::Base45 - Base45 encoding used in QR codes
 
-# VERSION
-
-Version 0.01
-
 # SYNOPSIS
 
-    use QRCode::Base45;
+```perl
+use QRCode::Base45;
 
-    my $text_for_qrcode = encode_base45($binary_or_utf8_data);
-    my $binary_data = decode_base45($text_from_qrcode);
+my $text_for_qrcode = encode_base45($binary_or_utf8_data);
+my $binary_data = decode_base45($text_from_qrcode);
+```
 
 # DESCRIPTION
 
@@ -61,16 +59,20 @@ such as IETF:: or RFCxyzq::.
 
 To install this module, run the following commands:
 
-        perl Makefile.PL
-        make
-        make test
-        make install
+```
+    perl Makefile.PL
+    make
+    make test
+    make install
+```
 
 # SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc QRCode::Base45
+```
+perldoc QRCode::Base45
+```
 
 You can also look for information at:
 
